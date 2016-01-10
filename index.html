@@ -112,7 +112,6 @@ public class SearchViewModel : ReactiveObject, IRoutableViewHost
     public string SearchQuery {
         get { return searchQuery; }
         set { this.RaiseAndSetIfChanged(ref searchQuery, value); }
-
     }
 
     public ReactiveCommand&lt;List&lt;SearchResults&gt;&gt; Search { get; set; }
