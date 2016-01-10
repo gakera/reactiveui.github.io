@@ -16,9 +16,9 @@
 <link rel="stylesheet" href="/css/prettify.min.css" />
 <link rel="stylesheet" href="/css/main.min.css" />
 
-	
+
 <link rel="stylesheet" href="/css/home.min.css" />
-	
+
 
 <script src="/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
 
@@ -96,12 +96,12 @@
 <div class="container">
 	<div class="marketing">
 		<div class="row-fluid">
-			<div class="span6">
+			<div class="span5">
 
 			<img src="/img/tumblr_inline_ng0du4FXNR1saryxr.png">
 			</div>
 
-			<div class="span6">
+			<div class="span7">
 			<br/>
 <pre class="prettyprint linenums">
 public class SearchViewModel : ReactiveObject, IRoutableViewHost
@@ -151,7 +151,7 @@ public SearchViewModel(ISearchService searchService = null)
 
     // ReactiveCommands are themselves IObservables, whose value are the results
     // from the async method, guaranteed to arrive on the UI thread. We're going
-    // to take the list of search results that the background operation loaded, 
+    // to take the list of search results that the background operation loaded,
     // and them into our SearchResults.
     Search.Subscribe(results => {
         SearchResults.Clear();
@@ -160,7 +160,7 @@ public SearchViewModel(ISearchService searchService = null)
 
     // ThrownExceptions is any exception thrown from the CreateAsyncTask piped
     // to this Observable. Subscribing to this allows you to handle errors on
-    // the UI thread. 
+    // the UI thread.
     Search.ThrownExceptions
         .Subscribe(ex => {
             UserError.Throw("Potential Network Connectivity Error", ex);
