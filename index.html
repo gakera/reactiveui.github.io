@@ -115,7 +115,7 @@ public class SearchViewModel : ReactiveObject, IRoutableViewHost
         set { this.RaiseAndSetIfChanged(ref searchQuery, value); }
     }
 
-    public ReactiveCommand&lt;List&lt;SearchResults&gt;&gt; Search { get; set; }
+    public ReactiveCommand&lt;string, List&lt;SearchResults&gt;&gt; Search { get; set; }
 
     public ISearchService SearchService { get; set; }
 }
@@ -145,9 +145,8 @@ public SearchViewModel(ISearchService searchService = null)
     // guarantees that this block will only run exactly once at a time, and
     // that the CanExecute will auto-disable and that property IsExecuting will
     // be set according whilst it is running.
-    Search = ReactiveCommand.CreateAsyncTask(canSearch, async _ => {
-        return await searchService.Search(this.SearchQuery);
-    });
+    Search = ReactiveCommand.CreateFromTask&lt;string, List&lt;SearchResults&gt;&gt;(_ => 
+        searchService.Search(this.SearchQuery), canSearch);
 
     // ReactiveCommands are themselves IObservables, whose value are the results
     // from the async method, guaranteed to arrive on the UI thread. We're going
@@ -170,7 +169,7 @@ public SearchViewModel(ISearchService searchService = null)
     // of "dead airtime", then automatically invoke the subscribe command.
     this.WhenAnyValue(x => x.SearchQuery)
         .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-        .InvokeCommand(this, x => x.Search);
+        .InvokeCommand(Search);
 }
 </pre>
 			</div>
