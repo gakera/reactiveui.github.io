@@ -135,38 +135,37 @@ public SearchViewModel(ISearchService searchService = null)
 {
     SearchService = searchService ?? Locator.Current.GetService&lt;ISearchService&gt;();
 
-    // Here we're describing here, in a *declarative way*, the conditions in
-    // which the Search command is enabled.  Now our Command IsEnabled is
-    // perfectly efficient, because we're only updating the UI in the scenario
-    // when it should change.
-    var canSearch = this.WhenAny(x => x.SearchQuery, x => !String.IsNullOrWhiteSpace(x.Value));
+    // Here we describe, in a *declarative way*, the conditions in
+    // which the Search command should be enabled. 
+    var canExecuteSearch = this.WhenAny(x => x.SearchQuery, x => !String.IsNullOrWhiteSpace(x.Value));
 
     // ReactiveCommand has built-in support for background operations and
-    // guarantees that this block will only run exactly once at a time, and
-    // that the CanExecute will auto-disable and that property IsExecuting will
-    // be set according whilst it is running.
+    // guarantees that the searchService.Search will run no more than once at a time.
+    // The CanExecute property is updated based on the canExecuteSearch conditions defined above 
+    // and the IsExecuting property will be set automatically while the Search task is running.
     Search = ReactiveCommand.CreateFromTask&lt;string, List&lt;SearchResults&gt;&gt;(_ => 
-        searchService.Search(this.SearchQuery), canSearch);
+        searchService.Search(this.SearchQuery), canExecuteSearch);
 
-    // ReactiveCommands are themselves IObservables, whose value are the results
-    // from the async method, guaranteed to arrive on the UI thread. We're going
-    // to take the list of search results that the background operation loaded,
-    // and them into our SearchResults.
+    // ReactiveCommands are themselves IObservables, whose values are the results
+    // from the associated async method, which are guaranteed to arrive on the UI thread. 
+    // Here we declare that the search results from the background operation are to be
+    // added into the SearchResults list, after it has been cleared of older results.
     Search.Subscribe(results => {
         SearchResults.Clear();
         SearchResults.AddRange(results);
     });
 
-    // ThrownExceptions is any exception thrown from the CreateAsyncTask piped
-    // to this Observable. Subscribing to this allows you to handle errors on
-    // the UI thread.
+    // ReactiveCommands include the ThrownExceptions Observable which propagates any exception 
+    // thrown by the associated Task (as well as any potential canExecuteSearch errors). 
+    // Subscribing to it allows you to handle errors on the UI thread.
     Search.ThrownExceptions
         .Subscribe(ex => {
             UserError.Throw("Potential Network Connectivity Error", ex);
         });
 
-    // Whenever the Search query changes, we're going to wait for one second
-    // of "dead airtime", then automatically invoke the subscribe command.
+    // Whenever the SearchQuery string changes, we wait untill no further changes 
+    // have occured over the span of one second, then automatically invoke the Search command. 
+    // This ensures our Search operation is not invoked too frequently while the user is typing.
     this.WhenAnyValue(x => x.SearchQuery)
         .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
         .InvokeCommand(Search);
